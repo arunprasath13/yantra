@@ -43,7 +43,7 @@ const EntityTable: React.FC<EntityTableProps> = ({
                 checked={selectedEntities.length === entities.length}
               />
             </th>
-            <th className="text-gray-500">Code</th>
+            <th className="p-3 text-left text-gray-500">Code</th>
             <th className="p-3 text-left text-gray-500">Name</th>
             <th className="p-3 text-left text-gray-500">Description</th>
             <th className="p-3 text-left text-gray-500">Created By</th>

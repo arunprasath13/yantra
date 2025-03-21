@@ -45,7 +45,7 @@ const TerritoryTable: React.FC<TerritoryTableProps> = ({
                                     checked={selectedEntities.length === entities.length && entities.length > 0}
                                 />
                             </th>
-                            <th className="text-gray-500">Territory Code</th>
+                            <th className="p-3 text-left text-gray-500">Territory Code</th>
                             <th className="p-3 text-left text-gray-500">Territory Name</th>
                             <th className="p-3 text-left text-gray-500">District</th>
                             <th className="p-3 text-left text-gray-500">Territory Manager</th>

@@ -29,6 +29,9 @@ const Sidebar = () => {
                     <h2 style={{ padding: "12px 16px", fontSize: "14px", fontWeight: "600", color: "rgb(51,51,51)", display: "block" }}>Sales Force Management</h2>
                     <ul className="space-y-2 text-gray-700">
                         <li className="flex items-center space-x-2 px-4 text-sm text-gray-800 cursor-pointer border-l-4 border-transparent hover:border-blue-500 hover:bg-gray-100 transition" style={{ padding: "12px 16px 12px 32px" }}>
+                            <MdOutlineMedicalServices /> <span>Territory Mapping</span>
+                        </li>
+                        <li className="flex items-center space-x-2 px-4 text-sm text-gray-800 cursor-pointer border-l-4 border-transparent hover:border-blue-500 hover:bg-gray-100 transition" style={{ padding: "12px 16px 12px 32px" }}>
                             <MdOutlineMedicalServices /> <span>Visit Manager</span>
                         </li>
                         <li className="flex items-center space-x-2 px-4 text-sm text-gray-800 cursor-pointer border-l-4 border-transparent hover:border-blue-500 hover:bg-gray-100 transition" style={{ padding: "12px 16px 12px 32px" }}>
@@ -40,6 +43,7 @@ const Sidebar = () => {
                         <li className="flex items-center space-x-2 px-4 text-sm text-gray-800 cursor-pointer border-l-4 border-transparent hover:border-blue-500 hover:bg-gray-100 transition" style={{ padding: "12px 16px 12px 32px" }}>
                             <BsFileText /> <span>Contents</span>
                         </li>
+                        
                     </ul>
                 </div>
                 <div>

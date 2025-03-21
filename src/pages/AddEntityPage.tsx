@@ -10,13 +10,13 @@ import axios from "axios";
 import { toast } from "react-toastify";
 const { Title, Text } = Typography;
 
-// ✅ Form Schema
+
 const schema: yup.ObjectSchema<FormData> = yup.object({
   code: yup.string().required("Code is required"),
   name: yup.string().required("Name is required"),
   description: yup.string().required("Description is required"),
   status: yup.boolean().default(true),
-  entityCategory: yup.number().required("Entity Category is required"), // Updated field
+  entityCategory: yup.number().required("Entity Category is required"), 
 });
 
 interface FormData {

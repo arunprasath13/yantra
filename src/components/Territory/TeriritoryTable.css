@@ -1,0 +1,83 @@
+/* 
+.custom-switch.active-switch {
+  background-color: #52c41a; 
+}
+
+.custom-switch.inactive-switch {
+  background-color: #ff4d4f; 
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto; 
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+th {
+  background-color: #f9fafb;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+}
+
+button.text-blue-500 {
+  color: #3b82f6;
+}
+
+button.text-blue-500:hover {
+  text-decoration: underline;
+}
+
+
+th, td {
+  min-width: 100px; 
+}
+
+
+th:nth-child(1), td:nth-child(1) { 
+  width: 5%;
+}
+th:nth-child(2), td:nth-child(2) { 
+  width: 10%;
+}
+th:nth-child(3), td:nth-child(3) { 
+  width: 15%;
+}
+th:nth-child(4), td:nth-child(4) { 
+  width: 10%;
+}
+th:nth-child(5), td:nth-child(5) { 
+  width: 15%;
+}
+th:nth-child(6), td:nth-child(6) { 
+  width: 10%;
+}
+th:nth-child(7), td:nth-child(7) { 
+  width: 10%;
+}
+th:nth-child(8), td:nth-child(8) { 
+  width: 10%;
+}
+th:nth-child(9), td:nth-child(9) { 
+  width: 10%;
+}
+th:nth-child(10), td:nth-child(10) { 
+  width: 5%;
+}
+th:nth-child(11), td:nth-child(11) { 
+  width: 5%;
+} */

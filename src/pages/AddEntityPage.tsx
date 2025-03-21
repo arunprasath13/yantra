@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -9,7 +9,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 const { Title, Text } = Typography;
-
 
 // ✅ Form Schema
 const schema: yup.ObjectSchema<FormData> = yup.object({
@@ -32,9 +31,8 @@ const AddEntityPage: React.FC = () => {
   const { entityId } = useParams<{ entityId: string }>(); 
   const { entityType } = useParams<{ entityType: string }>();
   const navigate = useNavigate();
-  const [submittedData, setSubmittedData] = useState<FormData | null>(null);
+  const [, setSubmittedData] = useState<FormData | null>(null);
 
- 
   const safeEntityCategory = entityId ? Number(entityId) : 0; 
 
   const handleGoBack = () => {
@@ -62,7 +60,6 @@ const AddEntityPage: React.FC = () => {
   const statusValue = watch("status");
 
   const onSubmit = async (data: FormData) => {
-
     const payload = {
       ...data,
       entityCategory: safeEntityCategory, 
@@ -73,14 +70,11 @@ const AddEntityPage: React.FC = () => {
 
     toast.success("Added succesfully")
 
-
     navigate(-1);
 
-    
     try {
       const response = await axios.post("http://localhost:4000/api/entities", payload);
       console.log("API Response:", response.data);
-
       
       setSubmittedData(payload);
       message.success("Form Submitted Successfully!");

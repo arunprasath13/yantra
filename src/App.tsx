@@ -5,7 +5,6 @@ import EntityPage from "./pages/EntityPage";
 import useAutheStore from "./store/useAutheStore";
 import LoginPage from "./pages/LoginPage";
 import { ToastContainer } from "react-toastify";
-import AddDepartmentPage from "./pages/AddEntityPage";
 import AddEntityPage from "./pages/AddEntityPage";
 
 const ProtectedRoute = ({ element }: { element: React.ReactElement }) => {

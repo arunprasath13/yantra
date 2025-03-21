@@ -73,7 +73,7 @@ const AddEntityPage: React.FC = () => {
     navigate(-1);
 
     try {
-      const response = await axios.post("http://localhost:4000/api/entities", payload);
+      const response = await axios.post(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities`, payload);
       console.log("API Response:", response.data);
       
       setSubmittedData(payload);

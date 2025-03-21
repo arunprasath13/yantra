@@ -23,7 +23,7 @@ const EntityPage = () => {
     if (entityId) {
       const fetchData = async () => {
         try {
-          const response = await fetch(`http://localhost:4000/api/entities/${entityId}`);
+          const response = await fetch(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/${entityId}`);
           const result = await response.json();
           setData(result); 
         } catch (error) {

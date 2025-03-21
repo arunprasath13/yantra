@@ -37,7 +37,7 @@ const TerritoriesPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/territories");
+        const response = await fetch(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories`);
         const result = await response.json();
 
         const mappedData = result.map((item: any) => ({

@@ -56,7 +56,7 @@ const AddEditTerritoryPage = () => {
     if (isEditMode) {
       setLoading(true);
       axios
-        .get(`http://localhost:4000/api/territories/${id}`)
+        .get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories/${id}`)
         .then((response) => {
           console.log("Fetched Territory Data:", response.data); // Debugging
 
@@ -106,11 +106,11 @@ const AddEditTerritoryPage = () => {
     try {
       if (isEditMode) {
         console.log("✏️ Editing mode - Updating territory...");
-        await axios.put(`http://localhost:4000/api/territories/${id}`, payload);
+        await axios.put(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories/${id}`, payload);
         toast.success("Territory updated successfully");
       } else {
         console.log("➕ Add mode - Creating new territory...");
-        await axios.post("http://localhost:4000/api/territories", payload);
+        await axios.post(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories`, payload);
         toast.success("Territory added successfully");
       }
 

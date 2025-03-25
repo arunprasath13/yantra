@@ -65,9 +65,9 @@ const TerritoryTable: React.FC<TerritoryTableProps> = ({
     setSwitchLoading(prev => ({ ...prev, [id]: true }));
     const currentEntity = entities.find(e => e._id === id);
     const newStatus = !currentEntity?.status;
-
+  
     try {
-      const response = await axios.put(
+      await axios.put(
         `http://localhost:4000/api/territories/${id}/status`,
         { status: newStatus }, 
         {
@@ -77,7 +77,7 @@ const TerritoryTable: React.FC<TerritoryTableProps> = ({
         }
       );
       toggleActive(id); 
-      toast.success("Status updated succesfully")
+      toast.success("Status updated successfully");
     } catch (error) {
       console.error('Error updating status:', error);
       message.error('Failed to update status');

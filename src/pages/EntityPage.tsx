@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { Button, Dropdown, Menu, Input, Switch, Row, Col } from "antd";
+import { Button, Dropdown, Menu, Input, Switch} from "antd";
 import {
   FilterOutlined,
   SearchOutlined,

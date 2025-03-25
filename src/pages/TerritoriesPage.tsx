@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { Button, Dropdown, Menu, Input, Row, Col, Select, Switch } from "antd";
+
 import {
   SearchOutlined,
   PlusOutlined,
@@ -14,6 +15,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { TerritoryType } from "../types/TerritoryType";
 import TerritoryTable from "../components/Territory/TerritoryTable";
 
+
 const { Option } = Select;
 
 const menu = (
@@ -24,6 +26,7 @@ const menu = (
 );
 
 const TerritoriesPage = () => {
+  const location = useLocation();
   const { entityType } = useParams<{ entityType: string }>();
   const [data, setData] = useState<TerritoryType[]>([]);
   const [selectedEntities, setSelectedEntities] = useState<string[]>([]);
@@ -62,7 +65,8 @@ const TerritoriesPage = () => {
       }
     };
     fetchData();
-  }, []);
+
+  }, [location]);
 
   useEffect(() => {
     let filtered = data || [];
@@ -136,7 +140,7 @@ const TerritoriesPage = () => {
             {entityType || "Territory"}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Home Configuration
+            Home &gt; <Link to={"/configuration"}>Configuration</Link>
           </p>
         </div>
         <div className="flex flex-wrap justify-center sm:justify-end items-center gap-2 sm:gap-3">

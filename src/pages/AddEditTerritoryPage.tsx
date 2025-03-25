@@ -16,6 +16,8 @@ const { Option } = Select;
 const schema = yup.object({
   code: yup.string().required("Code is required"),
   name: yup.string().required("Name is required"),
+  country: yup.string().required("Country is required"),
+  state: yup.string().required("State is required"),
   district: yup.string().required("District is required"),
   territoryManager: yup.string().required("Territory Manager is required"),
   longitude: yup.string().required("Longitude is required"),
@@ -27,18 +29,23 @@ const AddEditTerritoryPage = () => {
   const { entityType, id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const [states, setStates] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
 
   const {
     control,
     handleSubmit,
     reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
       code: "",
       name: "",
+      country: "India",
+      state: "Tamilnadu",
       district: "Chennai",
       territoryManager: "",
       longitude: "",
@@ -48,22 +55,61 @@ const AddEditTerritoryPage = () => {
     mode: "onChange",
   });
 
-  
   const isEditMode = Boolean(id);
+  const selectedCountry = watch("country");
+  const selectedState = watch("state");
+
+ 
+  const countries = ["India"];
+  const indiaStates = [
+    "Tamilnadu",
+    "Kerala",
+    "Karnataka",
+    "Andhra Pradesh",
+    "Telangana",
+  ];
+  const tamilnaduDistricts = ["Tirunelveli", "Chennai", "Madurai", "Tuticorin"];
+  const managers = ["Mr. Elangi", "Ms. Smith", "Mr. Kumar"];
 
   
+  useEffect(() => {
+    if (selectedCountry === "India") {
+      setStates(indiaStates);
+      setValue("state", "Tamilnadu"); 
+      setDistricts([]);
+    } else {
+      setStates([]);
+      setDistricts([]);
+      setValue("state", "");
+      setValue("district", "");
+    }
+  }, [selectedCountry, setValue]);
+
+ 
+  useEffect(() => {
+    if (selectedState === "Tamilnadu") {
+      setDistricts(tamilnaduDistricts);
+      setValue("district", "Chennai"); 
+    } else {
+      setDistricts([]);
+      setValue("district", "");
+    }
+  }, [selectedState, setValue]);
+
+
   useEffect(() => {
     if (isEditMode) {
       setLoading(true);
       axios
         .get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories/${id}`)
         .then((response) => {
-          console.log("Fetched Territory Data:", response.data); // Debugging
-
+          console.log("Fetched Territory Data:", response.data);
           if (response.data) {
             reset({
               code: response.data.territoryCode || "",
               name: response.data.territoryName || "",
+              country: response.data.country || "India",
+              state: response.data.state || "Tamilnadu",
               district: response.data.district || "Chennai",
               territoryManager: response.data.territoryManager || "",
               longitude: response.data.longitude || "",
@@ -80,48 +126,38 @@ const AddEditTerritoryPage = () => {
     }
   }, [id, isEditMode, reset]);
 
-
   const handleGoBack = () => navigate(-1);
 
- 
   const onSubmit = async (data: any) => {
-   
-
     const payload = {
       territoryCode: data.code,
       territoryName: data.name,
+      country: data.country,
+      state: data.state,
       district: data.district,
       territoryManager: data.territoryManager,
       longitude: data.longitude,
       latitude: data.latitude,
       status: data.status,
       tenantKey: "tenant-123",
-      createdBy: "dummyUser",
-      country: "India",
-      state: "Tamil Nadu",
+      createdBy: "Admin",
     };
 
     console.log("📝 Payload to be sent:", payload);
 
     try {
       if (isEditMode) {
-        console.log("✏️ Editing mode - Updating territory...");
         await axios.put(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories/${id}`, payload);
         toast.success("Territory updated successfully");
       } else {
-        console.log("➕ Add mode - Creating new territory...");
         await axios.post(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territories`, payload);
         toast.success("Territory added successfully");
       }
-
       navigate(-1);
     } catch (error) {
       toast.error("There was an error while saving the territory");
     }
   };
-
-  const districts = ["Tirunelveli", "Chennai", "Madurai", "Tuticorin"];
-  const managers = ["Mr. Elangi", "Ms. Smith", "Mr. Kumar"];
 
   return (
     <DashboardLayout>
@@ -130,7 +166,6 @@ const AddEditTerritoryPage = () => {
           <Title level={3} className="text-[#173E73] text-center sm:text-left">
             {isEditMode ? "Edit Territory" : "Add New Territory"} {entityType}
           </Title>
-
           <Button type="primary" className="flex items-center" onClick={handleGoBack}>
             <ArrowLeft size={16} className="mr-2" />
             BACK
@@ -169,6 +204,51 @@ const AddEditTerritoryPage = () => {
                 </div>
 
                 <div>
+                  <label className="block font-semibold text-gray-700">Country *</label>
+                  <Controller
+                    name="country"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        style={{ width: "100%" }}
+                      >
+                        {countries.map((country) => (
+                          <Option key={country} value={country}>
+                            {country}
+                          </Option>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  {errors.country && <Text type="danger">{errors.country.message}</Text>}
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-gray-700">State *</label>
+                  <Controller
+                    name="state"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        value={field.value}
+                        onChange={(value) => field.onChange(value)}
+                        style={{ width: "100%" }}
+                        disabled={!selectedCountry}
+                      >
+                        {states.map((state) => (
+                          <Option key={state} value={state}>
+                            {state}
+                          </Option>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                  {errors.state && <Text type="danger">{errors.state.message}</Text>}
+                </div>
+
+                <div>
                   <label className="block font-semibold text-gray-700">District *</label>
                   <Controller
                     name="district"
@@ -178,6 +258,7 @@ const AddEditTerritoryPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        disabled={!selectedState}
                       >
                         {districts.map((district) => (
                           <Option key={district} value={district}>
@@ -234,7 +315,6 @@ const AddEditTerritoryPage = () => {
                   {errors.latitude && <Text type="danger">{errors.latitude.message}</Text>}
                 </div>
 
-                
                 <div>
                   <label className="block font-semibold text-gray-700">Status</label>
                   <Controller

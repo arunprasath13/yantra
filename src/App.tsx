@@ -7,6 +7,8 @@ import { ToastContainer } from "react-toastify";
 import AddEntityPage from "./pages/AddEntityPage";
 import TerritoriesPage from "./pages/TerritoriesPage";
 import AddEditTerritoryPage from "./pages/AddEditTerritoryPage";
+import TerritoryMappingPage from "./pages/TerritoryMappingPage";
+import AddEditTerritoryMappingPage from "./pages/AddEditTerritoryMappingPage";
 
 function App() {
   return (
@@ -15,10 +17,13 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/configuration" replace />} />
         <Route path="/configuration" element={<ConfigurationPage />} />
+        <Route path="/territory-mapping" element={<TerritoryMappingPage />} />
         <Route path="/:entityType/:entityId" element={<EntityPage />} />
         <Route path="/add/:entityType/:entityId" element={<AddEntityPage />} />
         <Route path="/territory" element={<TerritoriesPage />} />
         <Route path="/add-territory" element={<AddEditTerritoryPage />} />
+        <Route path="/add-territory-mapping" element={<AddEditTerritoryMappingPage />} />
+        <Route path="/edit-territory-mapping" element={<AddEditTerritoryMappingPage />} />
         <Route path="/edit-territory/:id" element={<AddEditTerritoryPage />} />
       </Routes>
     </Router>

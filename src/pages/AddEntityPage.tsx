@@ -8,6 +8,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
+
 const { Title, Text } = Typography;
 
 
@@ -15,25 +16,24 @@ const schema: yup.ObjectSchema<FormData> = yup.object({
   code: yup.string().required("Code is required"),
   name: yup.string().required("Name is required"),
   description: yup.string().required("Description is required"),
-  status: yup.boolean().default(true),
-  entityCategory: yup.number().required("Entity Category is required"), 
+  isActive: yup.boolean().default(true), 
+  entityCategory: yup.number().required("Entity Category is required"),
 });
 
 interface FormData {
   code: string;
   name: string;
   description: string;
-  status: boolean;
-  entityCategory: number; 
+  isActive: boolean; 
+  entityCategory: number;
 }
 
 const AddEntityPage: React.FC = () => {
-  const { entityId } = useParams<{ entityId: string }>(); 
-  const { entityType } = useParams<{ entityType: string }>();
+  const { entityId, entityType } = useParams<{ entityId: string; entityType: string }>();
   const navigate = useNavigate();
   const [, setSubmittedData] = useState<FormData | null>(null);
 
-  const safeEntityCategory = entityId ? Number(entityId) : 0; 
+  const safeEntityCategory = entityId ? Number(entityId) : 0;
 
   const handleGoBack = () => {
     navigate(-1);
@@ -42,8 +42,6 @@ const AddEntityPage: React.FC = () => {
   const {
     control,
     handleSubmit,
-    setValue,
-    watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: yupResolver(schema),
@@ -51,36 +49,37 @@ const AddEntityPage: React.FC = () => {
       code: "",
       name: "",
       description: "",
-      status: true,
-      entityCategory: safeEntityCategory, 
+      isActive: true, 
+      entityCategory: safeEntityCategory,
     },
     mode: "onChange",
   });
 
-  const statusValue = watch("status");
-
   const onSubmit = async (data: FormData) => {
     const payload = {
       ...data,
-      entityCategory: safeEntityCategory, 
-      createdBy: "dummyUser",  
+      isActive: data.isActive, 
+      entityCategory: safeEntityCategory,
+      createdBy: "Admin",
     };
 
-    console.log("Submitted Data with createdBy:", payload);
-
-    toast.success("Added succesfully")
-
-    navigate(-1);
+    console.log("Form Data before sending:", data); 
+    console.log("Payload being sent:", payload); 
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities`, payload);
+      const response = await axios.post(
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/entities`,
+        payload
+      );
       console.log("API Response:", response.data);
-      
+
       setSubmittedData(payload);
       message.success("Form Submitted Successfully!");
+      toast.success("Form Submitted Successfully");
+      navigate(-1);
     } catch (error) {
       console.error("Error submitting data:", error);
-      message.error("There was an error while submitting the form.");
+      toast.error("There was an error while submitting the form.");
     }
   };
 
@@ -127,9 +126,15 @@ const AddEntityPage: React.FC = () => {
 
               <div className="flex items-center gap-4">
                 <label className="font-semibold text-gray-700">Status</label>
-                <Switch
-                  checked={statusValue}
-                  onChange={(checked) => setValue("status", checked)}
+                <Controller
+                  name="isActive" 
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onChange={(checked) => field.onChange(checked)} 
+                    />
+                  )}
                 />
               </div>
             </div>

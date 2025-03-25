@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Switch, Modal, Pagination, Skeleton } from 'antd';
+import { Switch, Modal, Skeleton} from 'antd';
 import { TerritoryMappingType } from '../../types/TerritoryMappingType';
 import { Link } from 'react-router-dom';
 import History from "../../assets/history.png";
 import { CheckSquareOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import axios from 'axios'; 
-import dayjs from 'dayjs'; 
+import axios from 'axios';
+import dayjs from 'dayjs';
+import Pagination from '../Pagination/Pagination';
 
 interface TerritoryTableProps {
     entities: TerritoryMappingType[];
@@ -33,10 +34,12 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [selectedTerritory, setSelectedTerritory] = useState<TerritoryMappingType | null>(null);
     const [assignmentHistory, setAssignmentHistory] = useState<AssignmentHistory[]>([]);
-    const [historyLoading, setHistoryLoading] = useState(false); // Loading state for history fetch
+    const [historyLoading, setHistoryLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
+    const [rowsPerPage, setRowsPerPage] = useState(5); // Added rowsPerPage state
     const [loadingRows, setLoadingRows] = useState<{ [key: string]: boolean }>({});
-    const pageSize = 5;
+    const [switchLoading, setSwitchLoading] = useState<{ [key: string]: boolean }>({});
+    
 
     const isEntitiesArray = Array.isArray(entities);
 
@@ -48,7 +51,6 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
 
         setLoadingRows(newLoadingRows);
 
-        
         entities.forEach((entity) => {
             setTimeout(() => {
                 setLoadingRows((prev) => ({
@@ -59,9 +61,9 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
         });
     }, [entities, currentPage]);
 
-    
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+    // Pagination logic with rowsPerPage
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
     const paginatedEntities = entities.slice(startIndex, endIndex);
 
     const handleSelectAllChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -75,7 +77,6 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
         setHistoryLoading(true);
 
         try {
-           
             const response = await axios.get(`http://localhost:4000/api/territory-mappings/${entity._id}`);
             const territoryData = response.data;
             setAssignmentHistory(territoryData.assignmentHistory || []);
@@ -98,11 +99,36 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
         setSelectedEntities([]);
     };
 
-    
+    const handleRowsPerPageChange = (rows: number) => {
+        setRowsPerPage(rows);
+        setCurrentPage(1); // Reset to first page when rows per page changes
+        setSelectedEntities([]);
+    };
+
     const formatDate = (date: string) => {
         return dayjs(date).format('DD MMM YYYY');
     };
 
+    const handleToggleStatus = async (id: string) => {
+        setSwitchLoading((prev) => ({ ...prev, [id]: true }));
+        const currentEntity = entities.find((e) => e._id === id);
+        const newStatus = !currentEntity?.status;
+
+        try {
+            await axios.put(
+                `http://localhost:4000/api/territory-mappings/${id}/status`,
+                { status: newStatus },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            toggleActive(id);
+        } catch (error) {
+            console.error('Error updating status:', error);
+        } finally {
+            setSwitchLoading((prev) => ({ ...prev, [id]: false }));
+        }
+    };
+
+    
     if (!isEntitiesArray) {
         return <div>Invalid data for entities</div>;
     }
@@ -171,11 +197,13 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
                                             <td className="p-3 text-center">
                                                 <Switch
                                                     checked={entity.status}
-                                                    onChange={() => toggleActive(entity._id)}
+                                                    onChange={() => handleToggleStatus(entity._id)}
+                                                    loading={switchLoading[entity._id] || false}
+                                                    className={`custom-switch ${entity.status ? 'active-switch' : 'inactive-switch'}`}
                                                 />
                                             </td>
                                             <td className="p-3 text-center">
-                                                <Link to={`/edit-territory/${entity._id}`}>
+                                                <Link to={`/edit-territory-mapping/${entity._id}`}>
                                                     <button className="text-blue-500 hover:underline">Edit</button>
                                                 </Link>
                                             </td>
@@ -193,16 +221,15 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
                 </table>
             </div>
 
-            {entities.length > pageSize && (
-                <div className="mt-4 flex justify-end">
-                    <Pagination
-                        current={currentPage}
-                        pageSize={pageSize}
-                        total={entities.length}
-                        onChange={handlePageChange}
-                        showSizeChanger={false}
-                    />
-                </div>
+            {/* Custom Pagination */}
+            {entities.length > 0 && (
+                <Pagination
+                    currentPage={currentPage}
+                    rowsPerPage={rowsPerPage}
+                    totalRows={entities.length}
+                    onPageChange={handlePageChange}
+                    onRowsPerPageChange={handleRowsPerPageChange}
+                />
             )}
 
             <Modal

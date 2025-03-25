@@ -1,7 +1,7 @@
 // TerritoryTable.tsx
 import React, { useState, useEffect } from 'react';
-import { Switch, Skeleton, message } from 'antd';
-import axios from 'axios'; // Import Axios
+import { Switch, Skeleton } from 'antd';
+import axios from 'axios'; 
 import './TeriritoryTable.css';
 import { TerritoryType } from '../../types/TerritoryType';
 import { Link } from 'react-router-dom';
@@ -80,7 +80,7 @@ const TerritoryTable: React.FC<TerritoryTableProps> = ({
       toast.success("Status updated successfully");
     } catch (error) {
       console.error('Error updating status:', error);
-      message.error('Failed to update status');
+      toast.error("Failed to update status")
     } finally {
       setSwitchLoading(prev => ({ ...prev, [id]: false }));
     }

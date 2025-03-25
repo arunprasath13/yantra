@@ -8,7 +8,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
-import dayjs from "dayjs"; // For date handling with Ant Design DatePicker
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -21,7 +21,7 @@ const schema = yup.object({
   territoryCode: yup
     .string()
     .required("Territory Code is required")
-    .min(1, "Territory Code cannot be empty"), // Ensure it's not an empty string
+    .min(1, "Territory Code cannot be empty"),
   territoryName: yup.string().required("Territory Name is required"),
   executive: yup.string().required("Executive is required"),
   territoryManager: yup.string().required("Territory Manager is required"),
@@ -47,9 +47,8 @@ interface User {
   }>;
 }
 
-
 interface FilterOption {
-  children: string; 
+  children: string;
   value: string;
 }
 
@@ -57,74 +56,110 @@ const AddEditTerritoryMappingPage = () => {
   const { entityType, id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [users, setUsers] = useState<User[]>([]); 
-  const [loadingUsers, setLoadingUsers] = useState(false); 
-  const [selectedExecutive, setSelectedExecutive] = useState<User | null>(null); 
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [selectedExecutive, setSelectedExecutive] = useState<User | null>(null);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [states, setStates] = useState<string[]>([]);
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      country: "India",
-      state: "Tamil Nadu",
-      district: "Chennai",
-      territoryCode: "TNC001", 
-      territoryName: "Chennai Central",
+      country: "",
+      state: "",
+      district: "",
+      territoryCode: "",
+      territoryName: "",
       executive: "",
       territoryManager: "",
-      isActive: true,
-      fromDate: null, 
-      toDate: null, 
+      isActive: false,
+      fromDate: null,
+      toDate: null,
     },
     mode: "onChange",
   });
 
+  const selectedCountry = watch("country");
+  const selectedState = watch("state");
+
   const isEditMode = Boolean(id);
 
-  
-  useEffect(() => {
-    if (isEditMode) {
-      setLoading(true);
-      axios
-        .get(`http://localhost:4000/api/territory-mappings/${id}`)
-        .then((response) => {
-          console.log("Fetched Territory Data:", response.data);
-          if (response.data) {
-            reset({
-              country: response.data.country || "India",
-              state: response.data.state || "Tamil Nadu",
-              district: response.data.district || "Chennai",
-              territoryCode: response.data.territoryCode || "TNC001",
-              territoryName: response.data.territoryName || "Chennai Central",
-              executive: response.data.executive || "",
-              territoryManager: response.data.territoryManager || "",
-              isActive: response.data.isActive ?? true,
-              fromDate: response.data.fromDate ? new Date(response.data.fromDate) : null,
-              toDate: response.data.toDate ? new Date(response.data.toDate) : null,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Error fetching territory data:", error);
-          message.error("Failed to load territory data.");
-        })
-        .finally(() => setLoading(false));
+  // Fetch countries from API
+  const fetchCountries = async () => {
+    setLoadingCountries(true);
+    try {
+      const response = await axios.get("http://localhost:4000/api/entities/13");
+      const countryList = response.data.map((item: any) => item.name || item);
+      console.log("Fetched countries:", countryList);
+      setCountries(countryList);
+      return countryList;
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      message.error("Failed to load countries.");
+      return [];
+    } finally {
+      setLoadingCountries(false);
     }
-  }, [id, isEditMode, reset]);
+  };
+
+  
+  const fetchStates = async (country: string) => {
+    setLoadingStates(true);
+    try {
+      console.log("Fetching states for country:", country);
+      const response = await axios.get("http://localhost:4000/api/entities/14/67e28e21313bdbca16ae2860/related");
+      const stateList = response.data.map((item: any) => item.name || item);
+      console.log("Fetched states:", stateList);
+      setStates(stateList);
+      return stateList;
+    } catch (error) {
+      console.error("Error fetching states:", error);
+      message.error("Failed to load states.");
+      return [];
+    } finally {
+      setLoadingStates(false);
+    }
+  };
+
+
+  const fetchDistricts = async (state: string) => {
+    setLoadingDistricts(true);
+    try {
+      console.log("Fetching districts for state:", state);
+      const response = await axios.get("http://localhost:4000/api/entities/15/67e28e21313bdbca16ae2861/related");
+      const districtList = response.data.map((item: any) => item.name || item);
+      console.log("Fetched districts:", districtList);
+      setDistricts(districtList);
+      return districtList;
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      message.error("Failed to load districts.");
+      return [];
+    } finally {
+      setLoadingDistricts(false);
+    }
+  };
 
   
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const response = await axios.get('https://employee.edsolutions360.com/users');
-      const activeUsers = response.data.filter((user: User) => user.status === 'active');
+      const response = await axios.get("https://employee.edsolutions360.com/users");
+      const activeUsers = response.data.filter((user: User) => user.status === "active");
       setUsers(activeUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       message.error("Failed to load executives.");
     } finally {
       setLoadingUsers(false);
@@ -134,20 +169,112 @@ const AddEditTerritoryMappingPage = () => {
   
   useEffect(() => {
     fetchUsers();
+    fetchCountries();
   }, []);
+
+  
+  useEffect(() => {
+    if (isEditMode) {
+      setLoading(true);
+      const loadEditData = async () => {
+        try {
+          
+          const countryList = await fetchCountries();
+          console.log("Countries loaded for edit:", countryList);
+
+          
+          const response = await axios.get(`http://localhost:4000/api/territory-mappings/${id}`);
+          console.log("Fetched Territory Data:", response.data);
+
+          if (response.data) {
+            const territoryData = {
+              country: response.data.country || "",
+              state: response.data.state || "",
+              district: response.data.district || "",
+              territoryCode: response.data.territoryCode || "",
+              territoryName: response.data.territoryName || "",
+              executive: response.data.executive || "",
+              territoryManager: response.data.territoryManager || "",
+              isActive: response.data.isActive ?? true,
+              fromDate: response.data.fromDate ? new Date(response.data.fromDate) : null,
+              toDate: response.data.toDate ? new Date(response.data.toDate) : null,
+            };
+            reset(territoryData);
+            console.log("Form reset with:", territoryData);
+
+            
+            if (territoryData.country) {
+              const stateList = await fetchStates(territoryData.country);
+              if (stateList.length > 0) {
+                const stateToSet = stateList.includes(territoryData.state)
+                  ? territoryData.state
+                  : stateList[0];
+                console.log("Setting state to:", stateToSet);
+                setValue("state", stateToSet, { shouldValidate: true });
+
+                
+                const districtList = await fetchDistricts(stateToSet);
+                if (districtList.length > 0) {
+                  const districtToSet = districtList.includes(territoryData.district)
+                    ? territoryData.district
+                    : districtList[0];
+                  console.log("Setting district to:", districtToSet);
+                  setValue("district", districtToSet, { shouldValidate: true });
+                } else {
+                  console.log("No districts available for state:", stateToSet);
+                }
+              } else {
+                console.log("No states available for country:", territoryData.country);
+              }
+            } else {
+              console.log("No country provided in territory data");
+            }
+          }
+        } catch (error) {
+          console.error("Error in loadEditData:", error);
+          message.error("Failed to load territory data.");
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadEditData();
+    }
+  }, [id, isEditMode, reset, setValue]);
+
+  
+  useEffect(() => {
+    if (selectedCountry && !isEditMode) {
+      fetchStates(selectedCountry).then((stateList) => {
+        if (stateList.length > 0 && !watch("state")) {
+          console.log("Auto-populating state in add mode:", stateList[0]);
+          setValue("state", stateList[0], { shouldValidate: true });
+        }
+      });
+    }
+  }, [selectedCountry, setValue, isEditMode]);
+
+  
+  useEffect(() => {
+    if (selectedState && !isEditMode) {
+      fetchDistricts(selectedState).then((districtList) => {
+        if (districtList.length > 0 && !watch("district")) {
+          console.log("Auto-populating district in add mode:", districtList[0]);
+          setValue("district", districtList[0], { shouldValidate: true });
+        }
+      });
+    }
+  }, [selectedState, setValue, isEditMode]);
 
   const handleGoBack = () => navigate(-1);
 
   const onSubmit = async (data: any) => {
-    console.log("Form Data Before Submission:", data);
-
+    console.log("Form submitted with data:", data);
     const territoryCode = data.territoryCode ?? "TNC001";
-
     const payload = {
       tenantKey: "tenant-001",
       territoryCode: territoryCode,
       territoryName: data.territoryName,
-      country: data.country,
+      country: String(data.country),
       state: data.state,
       district: data.district,
       executive: data.executive,
@@ -159,24 +286,20 @@ const AddEditTerritoryMappingPage = () => {
       assignmentHistory: isEditMode
         ? undefined
         : [
-          {
-            date: data.fromDate ? dayjs(data.fromDate).toISOString() : new Date().toISOString(),
-            reassignedFrom: "None",
-            reassignedTo: data.executive,
-            reason: "Initial assignment",
-          },
-        ],
+            {
+              date: data.fromDate ? dayjs(data.fromDate).toISOString() : new Date().toISOString(),
+              reassignedFrom: "None",
+              reassignedTo: data.executive,
+              reason: "Initial assignment",
+            },
+          ],
     };
-
-    console.log("📝 Payload to be sent:", payload);
 
     try {
       if (isEditMode) {
-        console.log("✏️ Editing mode - Updating territory...");
         await axios.put(`http://localhost:4000/api/territory-mappings/${id}`, payload);
         toast.success("Territory updated successfully");
       } else {
-        console.log("➕ Add mode - Creating new territory...");
         await axios.post(`http://localhost:4000/api/territory-mappings`, payload);
         toast.success("Territory added successfully");
       }
@@ -187,26 +310,17 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  
-  const countries = ["India"];
-  const states = ["Tamil Nadu"];
-  const districts = ["Tirunelveli", "Chennai", "Madurai", "Tuticorin"];
-  const territories = ["Chennai Central", "Tirunelveli Central"];
-
-  
   const handleDropdownVisibleChange = (open: boolean) => {
     if (open) {
-      fetchUsers(); 
+      fetchUsers();
     }
   };
 
-  
   const handleExecutiveSelect = (value: string) => {
     const selectedUser = users.find((user) => `${user.firstName} ${user.lastName}` === value);
     setSelectedExecutive(selectedUser || null);
   };
 
-  
   const handleFilterOption = (input: string, option?: FilterOption): boolean => {
     return option ? option.children.toLowerCase().includes(input.toLowerCase()) : false;
   };
@@ -218,7 +332,6 @@ const AddEditTerritoryMappingPage = () => {
           <Title level={3} className="text-[#173E73] text-center sm:text-left">
             {isEditMode ? "Edit Territory Mapping" : "Add New Territory Mapping"} {entityType}
           </Title>
-
           <Button type="primary" className="flex items-center" onClick={handleGoBack}>
             <ArrowLeft size={16} className="mr-2" />
             BACK
@@ -229,12 +342,7 @@ const AddEditTerritoryMappingPage = () => {
           {loading ? (
             <Spin size="large" className="block mx-auto" />
           ) : (
-            <form
-              onSubmit={(e) => {
-                console.log("Form submitted! Calling handleSubmit...");
-                handleSubmit(onSubmit)(e);
-              }}
-            >
+            <form onSubmit={handleSubmit(onSubmit)}>
               {/* First Row: Country, State, District */}
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
@@ -247,6 +355,11 @@ const AddEditTerritoryMappingPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        loading={loadingCountries}
+                        showSearch
+                        placeholder="Select Country"
+                        optionFilterProp="children"
+                        filterOption={handleFilterOption}
                       >
                         {countries.map((country) => (
                           <Option key={country} value={country}>
@@ -269,6 +382,12 @@ const AddEditTerritoryMappingPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        loading={loadingStates}
+                        disabled={!selectedCountry}
+                        placeholder="Select State"
+                        showSearch
+                        optionFilterProp="children"
+                        filterOption={handleFilterOption}
                       >
                         {states.map((state) => (
                           <Option key={state} value={state}>
@@ -291,6 +410,12 @@ const AddEditTerritoryMappingPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        loading={loadingDistricts}
+                        disabled={!selectedState}
+                        placeholder="Select District"
+                        showSearch
+                        optionFilterProp="children"
+                        filterOption={handleFilterOption}
                       >
                         {districts.map((district) => (
                           <Option key={district} value={district}>
@@ -304,7 +429,7 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-              
+              {/* Rest of the form */}
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">Territory Code *</label>
@@ -333,12 +458,10 @@ const AddEditTerritoryMappingPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        placeholder="Select Territory Name"
                       >
-                        {territories.map((territory) => (
-                          <Option key={territory} value={territory}>
-                            {territory}
-                          </Option>
-                        ))}
+                        <Option value="Chennai Central">Chennai Central</Option>
+                        <Option value="Tirunelveli Central">Tirunelveli Central</Option>
                       </Select>
                     )}
                   />
@@ -360,12 +483,10 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-
+              {/* Executive and Territory Manager */}
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
-                  <label className="block font-semibold text-gray-700">
-                    Select the Executive *
-                  </label>
+                  <label className="block font-semibold text-gray-700">Select the Executive *</label>
                   <Controller
                     name="executive"
                     control={control}
@@ -385,19 +506,14 @@ const AddEditTerritoryMappingPage = () => {
                         filterOption={handleFilterOption}
                       >
                         {users.map((user) => (
-                          <Option
-                            key={user._id}
-                            value={`${user.firstName} ${user.lastName}`}
-                          >
+                          <Option key={user._id} value={`${user.firstName} ${user.lastName}`}>
                             {`${user.firstName} ${user.lastName} (${user.designation})`}
                           </Option>
                         ))}
                       </Select>
                     )}
                   />
-                  {errors.executive && (
-                    <Text type="danger">{errors.executive.message}</Text>
-                  )}
+                  {errors.executive && <Text type="danger">{errors.executive.message}</Text>}
                 </div>
 
                 <div className="flex-1">
@@ -418,10 +534,7 @@ const AddEditTerritoryMappingPage = () => {
                         filterOption={handleFilterOption}
                       >
                         {users.map((user) => (
-                          <Option
-                            key={user._id}
-                            value={`${user.firstName} ${user.lastName}`}
-                          >
+                          <Option key={user._id} value={`${user.firstName} ${user.lastName}`}>
                             {`${user.firstName} ${user.lastName} (${user.designation})`}
                           </Option>
                         ))}
@@ -432,7 +545,7 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-
+             
               {selectedExecutive && (
                 <div className="mb-6">
                   <Card className="flex items-center p-4 shadow-md">
@@ -446,25 +559,18 @@ const AddEditTerritoryMappingPage = () => {
                             {selectedExecutive.firstName} {selectedExecutive.lastName}
                           </Text>
                           <div>
-                            <Text className="text-gray-500">
-                              {selectedExecutive.designation}
-                            </Text>
+                            <Text className="text-gray-500">{selectedExecutive.designation}</Text>
                           </div>
                           <div className="flex items-center mt-1">
                             <span className="mr-2">📞</span>
-                            <Text>
-                              {selectedExecutive.dependents?.[0]?.contactNumber || "N/A"}
-                            </Text>
+                            <Text>{selectedExecutive.dependents?.[0]?.contactNumber || "N/A"}</Text>
                           </div>
                           <div className="flex items-center mt-1">
                             <span className="mr-2">✉️</span>
-                            <Text>
-                              {selectedExecutive.email || selectedExecutive.dependents?.[0]?.email || "N/A"}
-                            </Text>
+                            <Text>{selectedExecutive.email || selectedExecutive.dependents?.[0]?.email || "N/A"}</Text>
                           </div>
                         </div>
                         <div className="flex space-x-2">
-
                           <Button
                             shape="circle"
                             icon={<span>📞</span>}
@@ -477,7 +583,6 @@ const AddEditTerritoryMappingPage = () => {
                               }
                             }}
                           />
-
                           <Button
                             shape="circle"
                             icon={<span>✉️</span>}
@@ -490,7 +595,6 @@ const AddEditTerritoryMappingPage = () => {
                               }
                             }}
                           />
-
                           <Button shape="circle" icon={<span>⋯</span>} />
                         </div>
                       </div>
@@ -499,9 +603,8 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               )}
 
-
+              
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
-                {/* From Date */}
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">From Date *</label>
                   <Controller
@@ -519,7 +622,6 @@ const AddEditTerritoryMappingPage = () => {
                   />
                   {errors.fromDate && <Text type="danger">{errors.fromDate.message}</Text>}
                 </div>
-
 
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">To Date *</label>
@@ -540,7 +642,7 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-
+              {/* Submit and Cancel Buttons */}
               <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
                 <Button type="primary" htmlType="submit" disabled={isSubmitting}>
                   {isEditMode ? "Update" : "Save"}
@@ -552,7 +654,7 @@ const AddEditTerritoryMappingPage = () => {
         </Card>
       </div>
     </DashboardLayout>
-  );
+  );  
 };
 
 export default AddEditTerritoryMappingPage;

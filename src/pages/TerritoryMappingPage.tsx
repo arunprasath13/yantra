@@ -14,7 +14,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { TerritoryMappingType } from "../types/TerritoryMappingType";
 import TerritoryMappingTable from "../components/TerritoryMapping/TerritoryMappingTable";
 import axios from "axios";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 
@@ -52,7 +52,7 @@ const TerritoryMappingPage = () => {
                     executive: item.executive,
                     createdBy: item.createdBy,
                     createdOn: item.createdOn,
-                    status: item.isActive, 
+                    status: item.isActive,
                     country: item.country,
                     state: item.state,
                     fromDate: item.fromDate,
@@ -70,7 +70,7 @@ const TerritoryMappingPage = () => {
     }, [location]);
 
     useEffect(() => {
-        let filtered = [...data]; 
+        let filtered = [...data];
 
         if (country) {
             filtered = filtered.filter(
@@ -119,33 +119,16 @@ const TerritoryMappingPage = () => {
         );
     };
 
-    const toggleActive = async (_id: string) => {
-        try {
-            
-            const entity = data.find((item) => item._id === _id);
-            if (!entity) return;
 
-            const newStatus = !entity.status;
 
-            
-            await axios.put(`http://localhost:4000/api/territory-mappings/${_id}`, {
-                ...entity,
-                isActive: newStatus, 
-                status: undefined,
-            });
 
-           
-            setData((prevData) =>
-                prevData.map((entity) =>
-                    entity._id === _id ? { ...entity, status: newStatus } : entity
-                )
-            );
 
-            toast.success("Status updated successfully");
-        } catch (error) {
-            console.error("Error updating status:", error);
-            toast.error("Failed to update status");
-        }
+    const toggleActive = (_id: string) => {
+        setData((prevData) =>
+            prevData.map((entity) =>
+                entity._id === _id ? { ...entity, status: !entity.status } : entity
+            )
+        );
     };
 
     const countries = ["India"];
@@ -157,7 +140,7 @@ const TerritoryMappingPage = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center bg-white shadow-md rounded-lg p-3 sm:p-4 md:p-5">
                 <div className="text-center sm:text-left mb-3 sm:mb-0">
                     <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#173E73] capitalize">
-                        {entityType || "Territory"}
+                        {entityType || "Territory Mapping"}
                     </h1>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">
                         Home &gt; <Link to={"/configuration"}>Configuration</Link>
@@ -186,7 +169,7 @@ const TerritoryMappingPage = () => {
                             type="primary"
                             className="bg-[#173E73] text-white flex items-center gap-2 w-full sm:w-auto px-3 py-1 sm:px-4 sm:py-2 text-sm sm:text-base"
                         >
-                            <PlusOutlined /> Add New {entityType || "Territory"}
+                            <PlusOutlined /> Add New {entityType || "Territory Mapping"}
                         </Button>
                     </Link>
                 </div>

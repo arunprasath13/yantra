@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-
 const schema = yup.object({
   code: yup.string().required("Code is required"),
   name: yup.string().required("Name is required"),
@@ -29,8 +28,12 @@ const AddEditTerritoryPage = () => {
   const { entityType, id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [states, setStates] = useState<string[]>([]);
-  const [districts, setDistricts] = useState<string[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [districts, setDistricts] = useState<any[]>([]);
+  const [countries, setCountries] = useState<any[]>([]);
+  const [fetchingCountries, setFetchingCountries] = useState(false);
+  const [fetchingStates, setFetchingStates] = useState(false);
+  const [fetchingDistricts, setFetchingDistricts] = useState(false);
 
   const {
     control,
@@ -44,9 +47,9 @@ const AddEditTerritoryPage = () => {
     defaultValues: {
       code: "",
       name: "",
-      country: "India",
-      state: "Tamilnadu",
-      district: "Chennai",
+      country: "",
+      state: "",
+      district: "",
       territoryManager: "",
       longitude: "",
       latitude: "",
@@ -56,46 +59,88 @@ const AddEditTerritoryPage = () => {
   });
 
   const isEditMode = Boolean(id);
-  const selectedCountry = watch("country");
-  const selectedState = watch("state");
+  const selectedCountryId = watch("country");
+  const selectedStateId = watch("state");
 
- 
-  const countries = ["India"];
-  const indiaStates = [
-    "Tamilnadu",
-    "Kerala",
-    "Karnataka",
-    "Andhra Pradesh",
-    "Telangana",
-  ];
-  const tamilnaduDistricts = ["Tirunelveli", "Chennai", "Madurai", "Tuticorin"];
   const managers = ["Mr. Elangi", "Ms. Smith", "Mr. Kumar"];
 
-  
-  useEffect(() => {
-    if (selectedCountry === "India") {
-      setStates(indiaStates);
-      setValue("state", "Tamilnadu"); 
+
+  const fetchCountries = async () => {
+    setFetchingCountries(true);
+    try {
+      const response = await axios.get("http://localhost:4000/api/entities/13");
+      const apiCountries = response.data;
+      setCountries(apiCountries);
+      if (apiCountries.length > 0 && !selectedCountryId) {
+        setValue("country", apiCountries[0]._id);
+      }
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      message.error("Failed to load countries from API");
+      setCountries([{ _id: "fallback-id", name: "India" }]);
+      setValue("country", "fallback-id");
+    } finally {
+      setFetchingCountries(false);
+    }
+  };
+
+
+  const fetchStates = async (countryId: string) => {
+    if (!countryId) return;
+    setFetchingStates(true);
+    try {
+      const response = await axios.get(`http://localhost:4000/api/entities/14/${countryId}/related`);
+      const apiStates = response.data;
+      setStates(apiStates);
+      if (apiStates.length > 0 && !selectedStateId) {
+        setValue("state", apiStates[0]._id);
+      } else {
+        setValue("state", "");
+      }
+    } catch (error) {
+      console.error("Error fetching states:", error);
+      message.error("Failed to load states from API");
+      setStates([]);
+      setValue("state", "");
+    } finally {
+      setFetchingStates(false);
+    }
+  };
+
+
+  const fetchDistricts = async (stateId: string) => {
+    if (!stateId) return;
+    setFetchingDistricts(true);
+    try {
+      const response = await axios.get(`http://localhost:4000/api/entities/15/${stateId}/related`);
+      const apiDistricts = response.data;
+      setDistricts(apiDistricts);
+      if (apiDistricts.length > 0 && !watch("district")) {
+        setValue("district", apiDistricts[0]._id);
+      } else {
+        setValue("district", "");
+      }
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      message.error("Failed to load districts from API");
       setDistricts([]);
+      setValue("district", "");
+    } finally {
+      setFetchingDistricts(false);
+    }
+  };
+
+
+  useEffect(() => {
+    if (selectedCountryId) {
+      fetchStates(selectedCountryId);
     } else {
       setStates([]);
       setDistricts([]);
       setValue("state", "");
       setValue("district", "");
     }
-  }, [selectedCountry, setValue]);
-
- 
-  useEffect(() => {
-    if (selectedState === "Tamilnadu") {
-      setDistricts(tamilnaduDistricts);
-      setValue("district", "Chennai"); 
-    } else {
-      setDistricts([]);
-      setValue("district", "");
-    }
-  }, [selectedState, setValue]);
-
+  }, [selectedCountryId, setValue]);
 
   useEffect(() => {
     if (isEditMode) {
@@ -108,14 +153,18 @@ const AddEditTerritoryPage = () => {
             reset({
               code: response.data.territoryCode || "",
               name: response.data.territoryName || "",
-              country: response.data.country || "India",
-              state: response.data.state || "Tamilnadu",
-              district: response.data.district || "Chennai",
+              country: response.data.country || "",
+              state: response.data.state || "",
+              district: response.data.district || "",
               territoryManager: response.data.territoryManager || "",
               longitude: response.data.longitude || "",
               latitude: response.data.latitude || "",
               status: response.data.status ?? true,
             });
+            if (countries.length === 0) fetchCountries();
+            if (response.data.country) fetchStates(response.data.country);
+            // Fetch districts in edit mode if state is present
+            if (response.data.state) fetchDistricts(response.data.state);
           }
         })
         .catch((error) => {
@@ -176,32 +225,9 @@ const AddEditTerritoryPage = () => {
           {loading ? (
             <Spin size="large" className="block mx-auto" />
           ) : (
-            <form
-              onSubmit={(e) => {
-                console.log("Form submitted! Calling handleSubmit...");
-                handleSubmit(onSubmit)(e);
-              }}
-            >
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <label className="block font-semibold text-gray-700">Territory Code *</label>
-                  <Controller
-                    name="code"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                  {errors.code && <Text type="danger">{errors.code.message}</Text>}
-                </div>
 
-                <div>
-                  <label className="block font-semibold text-gray-700">Territory Name *</label>
-                  <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => <Input {...field} />}
-                  />
-                  {errors.name && <Text type="danger">{errors.name.message}</Text>}
-                </div>
 
                 <div>
                   <label className="block font-semibold text-gray-700">Country *</label>
@@ -213,10 +239,15 @@ const AddEditTerritoryPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        onDropdownVisibleChange={(open) => {
+                          if (open) fetchCountries();
+                        }}
+                        loading={fetchingCountries}
+                        placeholder="Select a country"
                       >
                         {countries.map((country) => (
-                          <Option key={country} value={country}>
-                            {country}
+                          <Option key={country._id} value={country._id}>
+                            {country.name}
                           </Option>
                         ))}
                       </Select>
@@ -224,7 +255,6 @@ const AddEditTerritoryPage = () => {
                   />
                   {errors.country && <Text type="danger">{errors.country.message}</Text>}
                 </div>
-
                 <div>
                   <label className="block font-semibold text-gray-700">State *</label>
                   <Controller
@@ -235,11 +265,13 @@ const AddEditTerritoryPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
-                        disabled={!selectedCountry}
+                        disabled={!selectedCountryId}
+                        loading={fetchingStates}
+                        placeholder="Select a state"
                       >
                         {states.map((state) => (
-                          <Option key={state} value={state}>
-                            {state}
+                          <Option key={state._id} value={state._id}>
+                            {state.name}
                           </Option>
                         ))}
                       </Select>
@@ -257,12 +289,19 @@ const AddEditTerritoryPage = () => {
                       <Select
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
+                        onDropdownVisibleChange={(open) => {
+                          if (open && selectedStateId) {
+                            fetchDistricts(selectedStateId);
+                          }
+                        }}
                         style={{ width: "100%" }}
-                        disabled={!selectedState}
+                        disabled={!selectedStateId}
+                        loading={fetchingDistricts}
+                        placeholder="Select a district"
                       >
                         {districts.map((district) => (
-                          <Option key={district} value={district}>
-                            {district}
+                          <Option key={district._id} value={district._id}>
+                            {district.name}
                           </Option>
                         ))}
                       </Select>
@@ -270,6 +309,32 @@ const AddEditTerritoryPage = () => {
                   />
                   {errors.district && <Text type="danger">{errors.district.message}</Text>}
                 </div>
+                <div>
+                  <label className="block font-semibold text-gray-700">Territory Code *</label>
+                  <Controller
+                    name="code"
+                    control={control}
+                    render={({ field }) => <Input {...field} />}
+                  />
+                  {errors.code && <Text type="danger">{errors.code.message}</Text>}
+                </div>
+
+
+
+
+                <div>
+                  <label className="block font-semibold text-gray-700">Territory Name *</label>
+                  <Controller
+                    name="name"
+                    control={control}
+                    render={({ field }) => <Input {...field} />}
+                  />
+                  {errors.name && <Text type="danger">{errors.name.message}</Text>}
+                </div>
+
+              
+
+
 
                 <div>
                   <label className="block font-semibold text-gray-700">Territory Manager *</label>

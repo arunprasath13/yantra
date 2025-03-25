@@ -20,11 +20,12 @@ function App() {
         <Route path="/territory-mapping" element={<TerritoryMappingPage />} />
         <Route path="/:entityType/:entityId" element={<EntityPage />} />
         <Route path="/add/:entityType/:entityId" element={<AddEntityPage />} />
+        <Route path="/edit/:entityType/:entityId" element={<AddEntityPage />} />
+         <Route path="/edit-territory/:id" element={<AddEditTerritoryPage />} />
         <Route path="/territory" element={<TerritoriesPage />} />
         <Route path="/add-territory" element={<AddEditTerritoryPage />} />
         <Route path="/add-territory-mapping" element={<AddEditTerritoryMappingPage />} />
-        <Route path="/edit-territory-mapping" element={<AddEditTerritoryMappingPage />} />
-        <Route path="/edit-territory/:id" element={<AddEditTerritoryPage />} />
+         <Route path="/edit-territory-mapping/:id" element={<AddEditTerritoryMappingPage />} />
       </Routes>
     </Router>
   );

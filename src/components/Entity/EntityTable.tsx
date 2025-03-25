@@ -1,10 +1,10 @@
-// EntityTable.tsx
 import React, { useState, useEffect } from 'react';
 import { Switch, Skeleton } from 'antd';
 import './EntityTable.css';
 import { Entity } from '../../types/EntityTypes';
+import { toast } from "react-toastify";
 import Pagination from '../Pagination/Pagination'; 
-
+import axios from 'axios';
 interface EntityTableProps {
   entities: Entity[];
   selectedEntities: string[];
@@ -22,13 +22,13 @@ const EntityTable: React.FC<EntityTableProps> = ({
 }) => {
   const isEntitiesArray = Array.isArray(entities);
 
-  // Pagination state
+
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loadingRows, setLoadingRows] = useState<{ [key: string]: boolean }>({});
   const [isTableLoading, setIsTableLoading] = useState(true);
+  const [switchLoading, setSwitchLoading] = useState<{ [key: string]: boolean }>({}); // Added for Switch loading state
 
-  
   useEffect(() => {
     setIsTableLoading(true);
     const newLoadingRows = entities.reduce((acc, entity) => {
@@ -56,11 +56,32 @@ const EntityTable: React.FC<EntityTableProps> = ({
     setSelectedEntities(isChecked ? entities.map((entity) => entity._id) : []);
   };
 
+
+  const handleToggleStatus = async (id: string) => {
+    setSwitchLoading((prev) => ({ ...prev, [id]: true }));
+    const currentEntity = entities.find((e) => e._id === id);
+    const newStatus = !currentEntity?.isActive;
+
+    try {
+      await axios.put(
+        `http://localhost:4000/api/entities/${id}/status`,
+        { status: newStatus },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+      toggleActive(id); 
+      toast.success("Status updated succesfully");
+    } catch (error) {
+      console.error('Error updating status:', error);
+    } finally {
+      setSwitchLoading((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
   if (!isEntitiesArray) {
     return <div>Invalid data for entities</div>;
   }
 
-  // Pagination logic
+  
   const totalRows = entities.length;
   const startIndex = (currentPage - 1) * rowsPerPage;
   const endIndex = Math.min(startIndex + rowsPerPage, totalRows);
@@ -137,7 +158,8 @@ const EntityTable: React.FC<EntityTableProps> = ({
                     <td className="p-3">
                       <Switch
                         checked={entity.isActive}
-                        onChange={() => toggleActive(entity._id)}
+                        onChange={() => handleToggleStatus(entity._id)}
+                        loading={switchLoading[entity._id] || false}
                         className={`custom-switch ${
                           entity.isActive ? 'active-switch' : 'inactive-switch'
                         }`}

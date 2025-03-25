@@ -68,6 +68,7 @@ const ConfigurationPage = () => {
                                 <h2 className="font-medium text-gray-700" style={{ color: "#173E73" }}>Salesforce Management</h2>
                                 <div className="space-y-2 mt-2">
                                     <ConfigItem icon={<Building size={20} />} label="Territory Master" path={`/territory`} />
+                                    <ConfigItem icon={<Building size={20} />} label="Territory Mapping" path={`/territory-mapping`} />
                                 </div>
                             </div>
 

@@ -77,7 +77,7 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
         setHistoryLoading(true);
 
         try {
-            const response = await axios.get(`http://localhost:4000/api/territory-mappings/${entity._id}`);
+            const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${entity._id}`);
             const territoryData = response.data;
             setAssignmentHistory(territoryData.assignmentHistory || []);
         } catch (error) {
@@ -116,7 +116,7 @@ const TerritoryMappingTable: React.FC<TerritoryTableProps> = ({
 
         try {
             await axios.put(
-                `http://localhost:4000/api/territory-mappings/${id}/status`,
+                `${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}/status`,
                 { status: newStatus },
                 { headers: { 'Content-Type': 'application/json' } }
             );

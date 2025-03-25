@@ -68,7 +68,7 @@ const AddEditTerritoryPage = () => {
   const fetchCountries = async () => {
     setFetchingCountries(true);
     try {
-      const response = await axios.get("http://localhost:4000/api/entities/13");
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/13`);
       const apiCountries = response.data;
       setCountries(apiCountries);
       if (apiCountries.length > 0 && !selectedCountryId) {
@@ -89,7 +89,7 @@ const AddEditTerritoryPage = () => {
     if (!countryId) return;
     setFetchingStates(true);
     try {
-      const response = await axios.get(`http://localhost:4000/api/entities/14/${countryId}/related`);
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/14/${countryId}/related`);
       const apiStates = response.data;
       setStates(apiStates);
       if (apiStates.length > 0 && !selectedStateId) {
@@ -112,7 +112,7 @@ const AddEditTerritoryPage = () => {
     if (!stateId) return;
     setFetchingDistricts(true);
     try {
-      const response = await axios.get(`http://localhost:4000/api/entities/15/${stateId}/related`);
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15/${stateId}/related`);
       const apiDistricts = response.data;
       setDistricts(apiDistricts);
       if (apiDistricts.length > 0 && !watch("district")) {

@@ -64,7 +64,7 @@ const EntityTable: React.FC<EntityTableProps> = ({
 
     try {
       await axios.put(
-        `http://localhost:4000/api/entities/${id}/status`,
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/${id}/status`,
         { status: newStatus },
         { headers: { 'Content-Type': 'application/json' } }
       );

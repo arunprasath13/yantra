@@ -68,7 +68,7 @@ const TerritoryTable: React.FC<TerritoryTableProps> = ({
   
     try {
       await axios.put(
-        `http://localhost:4000/api/territories/${id}/status`,
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/territories/${id}/status`,
         { status: newStatus }, 
         {
           headers: {

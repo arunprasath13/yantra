@@ -40,7 +40,7 @@ const TerritoryMappingPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get("http://localhost:4000/api/territory-mappings");
+                const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings`);
                 const result = response.data;
 
                 const mappedData: TerritoryMappingType[] = result.map((item: any) => ({

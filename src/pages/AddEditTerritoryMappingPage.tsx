@@ -99,7 +99,7 @@ const AddEditTerritoryMappingPage = () => {
   const fetchCountries = async () => {
     setLoadingCountries(true);
     try {
-      const response = await axios.get("http://localhost:4000/api/entities/13");
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/13`);
       const countryList = response.data.map((item: any) => item.name || item);
       console.log("Fetched countries:", countryList);
       setCountries(countryList);
@@ -118,7 +118,7 @@ const AddEditTerritoryMappingPage = () => {
     setLoadingStates(true);
     try {
       console.log("Fetching states for country:", country);
-      const response = await axios.get("http://localhost:4000/api/entities/14/67e28e21313bdbca16ae2860/related");
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/14/67e28e21313bdbca16ae2860/related`);
       const stateList = response.data.map((item: any) => item.name || item);
       console.log("Fetched states:", stateList);
       setStates(stateList);
@@ -137,7 +137,7 @@ const AddEditTerritoryMappingPage = () => {
     setLoadingDistricts(true);
     try {
       console.log("Fetching districts for state:", state);
-      const response = await axios.get("http://localhost:4000/api/entities/15/67e28e21313bdbca16ae2861/related");
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15/67e28e21313bdbca16ae2861/related`);
       const districtList = response.data.map((item: any) => item.name || item);
       console.log("Fetched districts:", districtList);
       setDistricts(districtList);
@@ -183,7 +183,7 @@ const AddEditTerritoryMappingPage = () => {
           console.log("Countries loaded for edit:", countryList);
 
           
-          const response = await axios.get(`http://localhost:4000/api/territory-mappings/${id}`);
+          const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}`);
           console.log("Fetched Territory Data:", response.data);
 
           if (response.data) {
@@ -297,10 +297,10 @@ const AddEditTerritoryMappingPage = () => {
 
     try {
       if (isEditMode) {
-        await axios.put(`http://localhost:4000/api/territory-mappings/${id}`, payload);
+        await axios.put(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}`, payload);
         toast.success("Territory updated successfully");
       } else {
-        await axios.post(`http://localhost:4000/api/territory-mappings`, payload);
+        await axios.post(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings`, payload);
         toast.success("Territory added successfully");
       }
       navigate(-1);

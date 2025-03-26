@@ -47,6 +47,12 @@ interface User {
   }>;
 }
 
+interface Territory {
+  _id: string;
+  code: string;
+  name: string;
+}
+
 interface FilterOption {
   children: string;
   value: string;
@@ -62,6 +68,7 @@ const AddEditTerritoryMappingPage = () => {
   const [countries, setCountries] = useState<string[]>([]);
   const [states, setStates] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
+  const [territories, setTerritories] = useState<Territory[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
@@ -92,6 +99,7 @@ const AddEditTerritoryMappingPage = () => {
 
   const selectedCountry = watch("country");
   const selectedState = watch("state");
+  const selectedTerritoryName = watch("territoryName");
 
   const isEditMode = Boolean(id);
 
@@ -113,7 +121,6 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  
   const fetchStates = async (country: string) => {
     setLoadingStates(true);
     try {
@@ -131,7 +138,6 @@ const AddEditTerritoryMappingPage = () => {
       setLoadingStates(false);
     }
   };
-
 
   const fetchDistricts = async (state: string) => {
     setLoadingDistricts(true);
@@ -151,7 +157,25 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  
+  // Fetch territories (for territoryName and territoryCode mapping)
+  const fetchTerritories = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15`); // Adjust endpoint if needed
+      const territoryList = response.data.map((item: any) => ({
+        _id: item._id,
+        code: item.code,
+        name: item.name,
+      }));
+      console.log("Fetched territories:", territoryList);
+      setTerritories(territoryList);
+      return territoryList;
+    } catch (error) {
+      console.error("Error fetching territories:", error);
+      message.error("Failed to load territories.");
+      return [];
+    }
+  };
+
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
@@ -166,23 +190,14 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  
+  // Load initial data
   useEffect(() => {
     fetchUsers();
-    fetchCountries();
-  }, []);
-
-  
-  useEffect(() => {
+    fetchTerritories(); // Fetch territories initially
     if (isEditMode) {
       setLoading(true);
       const loadEditData = async () => {
         try {
-          
-          const countryList = await fetchCountries();
-          console.log("Countries loaded for edit:", countryList);
-
-          
           const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}`);
           console.log("Fetched Territory Data:", response.data);
 
@@ -202,8 +217,8 @@ const AddEditTerritoryMappingPage = () => {
             reset(territoryData);
             console.log("Form reset with:", territoryData);
 
-            
-            if (territoryData.country) {
+            const countryList = await fetchCountries();
+            if (territoryData.country && countryList.includes(territoryData.country)) {
               const stateList = await fetchStates(territoryData.country);
               if (stateList.length > 0) {
                 const stateToSet = stateList.includes(territoryData.state)
@@ -212,7 +227,6 @@ const AddEditTerritoryMappingPage = () => {
                 console.log("Setting state to:", stateToSet);
                 setValue("state", stateToSet, { shouldValidate: true });
 
-                
                 const districtList = await fetchDistricts(stateToSet);
                 if (districtList.length > 0) {
                   const districtToSet = districtList.includes(territoryData.district)
@@ -220,14 +234,8 @@ const AddEditTerritoryMappingPage = () => {
                     : districtList[0];
                   console.log("Setting district to:", districtToSet);
                   setValue("district", districtToSet, { shouldValidate: true });
-                } else {
-                  console.log("No districts available for state:", stateToSet);
                 }
-              } else {
-                console.log("No states available for country:", territoryData.country);
               }
-            } else {
-              console.log("No country provided in territory data");
             }
           }
         } catch (error) {
@@ -243,6 +251,16 @@ const AddEditTerritoryMappingPage = () => {
 
   
   useEffect(() => {
+    if (selectedTerritoryName) {
+      const selectedTerritory = territories.find((t) => t.name === selectedTerritoryName);
+      if (selectedTerritory) {
+        setValue("territoryCode", selectedTerritory.code, { shouldValidate: true });
+        console.log("Autopopulated territoryCode:", selectedTerritory.code);
+      }
+    }
+  }, [selectedTerritoryName, territories, setValue]);
+
+  useEffect(() => {
     if (selectedCountry && !isEditMode) {
       fetchStates(selectedCountry).then((stateList) => {
         if (stateList.length > 0 && !watch("state")) {
@@ -253,7 +271,6 @@ const AddEditTerritoryMappingPage = () => {
     }
   }, [selectedCountry, setValue, isEditMode]);
 
-  
   useEffect(() => {
     if (selectedState && !isEditMode) {
       fetchDistricts(selectedState).then((districtList) => {
@@ -269,10 +286,9 @@ const AddEditTerritoryMappingPage = () => {
 
   const onSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
-    const territoryCode = data.territoryCode ?? "TNC001";
     const payload = {
       tenantKey: "tenant-001",
-      territoryCode: territoryCode,
+      territoryCode: data.territoryCode,
       territoryName: data.territoryName,
       country: String(data.country),
       state: data.state,
@@ -311,8 +327,8 @@ const AddEditTerritoryMappingPage = () => {
   };
 
   const handleDropdownVisibleChange = (open: boolean) => {
-    if (open) {
-      fetchUsers();
+    if (open && countries.length === 0) {
+      fetchCountries();
     }
   };
 
@@ -360,6 +376,7 @@ const AddEditTerritoryMappingPage = () => {
                         placeholder="Select Country"
                         optionFilterProp="children"
                         filterOption={handleFilterOption}
+                        onDropdownVisibleChange={handleDropdownVisibleChange}
                       >
                         {countries.map((country) => (
                           <Option key={country} value={country}>
@@ -429,7 +446,7 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-              {/* Rest of the form */}
+              {/* Territory Code and Territory Name */}
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">Territory Code *</label>
@@ -439,9 +456,8 @@ const AddEditTerritoryMappingPage = () => {
                     render={({ field }) => (
                       <Input
                         {...field}
-                        value={field.value ?? "TNC001"}
-                        onChange={(e) => field.onChange(e.target.value || "TNC001")}
-                        placeholder="Enter Territory Code"
+                        placeholder="Territory Code (auto-populated)"
+                        disabled // Disable manual input since it's autopopulated
                       />
                     )}
                   />
@@ -460,8 +476,11 @@ const AddEditTerritoryMappingPage = () => {
                         style={{ width: "100%" }}
                         placeholder="Select Territory Name"
                       >
-                        <Option value="Chennai Central">Chennai Central</Option>
-                        <Option value="Tirunelveli Central">Tirunelveli Central</Option>
+                        {territories.map((territory) => (
+                          <Option key={territory._id} value={territory.name}>
+                            {territory.name}
+                          </Option>
+                        ))}
                       </Select>
                     )}
                   />
@@ -499,7 +518,7 @@ const AddEditTerritoryMappingPage = () => {
                         }}
                         style={{ width: "100%" }}
                         loading={loadingUsers}
-                        onDropdownVisibleChange={handleDropdownVisibleChange}
+                        onDropdownVisibleChange={(open) => open && fetchUsers()}
                         showSearch
                         placeholder="Select Executive"
                         optionFilterProp="children"
@@ -527,7 +546,7 @@ const AddEditTerritoryMappingPage = () => {
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
                         loading={loadingUsers}
-                        onDropdownVisibleChange={handleDropdownVisibleChange}
+                        onDropdownVisibleChange={(open) => open && fetchUsers()}
                         showSearch
                         placeholder="Select Territory Manager"
                         optionFilterProp="children"
@@ -545,7 +564,6 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-             
               {selectedExecutive && (
                 <div className="mb-6">
                   <Card className="flex items-center p-4 shadow-md">
@@ -603,7 +621,6 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               )}
 
-              
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">From Date *</label>
@@ -642,7 +659,6 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-              {/* Submit and Cancel Buttons */}
               <div className="mt-6 flex flex-col sm:flex-row justify-end gap-4">
                 <Button type="primary" htmlType="submit" disabled={isSubmitting}>
                   {isEditMode ? "Update" : "Save"}
@@ -654,7 +670,7 @@ const AddEditTerritoryMappingPage = () => {
         </Card>
       </div>
     </DashboardLayout>
-  );  
+  );
 };
 
 export default AddEditTerritoryMappingPage;

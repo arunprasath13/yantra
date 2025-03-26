@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Schema for form validation
+
 const schema = yup.object({
   country: yup.string().required("Country is required"),
   state: yup.string().required("State is required"),
@@ -47,6 +47,21 @@ interface User {
   }>;
 }
 
+interface Country {
+  _id: string;
+  name: string;
+}
+
+interface State {
+  _id: string;
+  name: string;
+}
+
+interface District {
+  _id: string;
+  name: string;
+}
+
 interface Territory {
   _id: string;
   code: string;
@@ -65,13 +80,14 @@ const AddEditTerritoryMappingPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [selectedExecutive, setSelectedExecutive] = useState<User | null>(null);
-  const [countries, setCountries] = useState<string[]>([]);
-  const [states, setStates] = useState<string[]>([]);
-  const [districts, setDistricts] = useState<string[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [states, setStates] = useState<State[]>([]);
+  const [districts, setDistricts] = useState<District[]>([]);
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingTerritories, setLoadingTerritories] = useState(false);
 
   const {
     control,
@@ -98,17 +114,21 @@ const AddEditTerritoryMappingPage = () => {
   });
 
   const selectedCountry = watch("country");
-  const selectedState = watch("state");
+  const selectedState = watch("state"); 
+  const selectedDistrict = watch("district"); 
   const selectedTerritoryName = watch("territoryName");
 
   const isEditMode = Boolean(id);
 
-  // Fetch countries from API
+ 
   const fetchCountries = async () => {
     setLoadingCountries(true);
     try {
       const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/13`);
-      const countryList = response.data.map((item: any) => item.name || item);
+      const countryList = response.data.map((item: any) => ({
+        _id: item._id,
+        name: item.name || item,
+      }));
       console.log("Fetched countries:", countryList);
       setCountries(countryList);
       return countryList;
@@ -121,12 +141,18 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  const fetchStates = async (country: string) => {
+
+  const fetchStates = async (countryId: string) => {
     setLoadingStates(true);
     try {
-      console.log("Fetching states for country:", country);
-      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/14/67e28e21313bdbca16ae2860/related`);
-      const stateList = response.data.map((item: any) => item.name || item);
+      console.log("Fetching states for country ID:", countryId);
+      const response = await axios.get(
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/14/${countryId}/related`
+      );
+      const stateList = response.data.map((item: any) => ({
+        _id: item._id,
+        name: item.name || item,
+      }));
       console.log("Fetched states:", stateList);
       setStates(stateList);
       return stateList;
@@ -139,12 +165,18 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  const fetchDistricts = async (state: string) => {
+  
+  const fetchDistricts = async (stateId: string) => {
     setLoadingDistricts(true);
     try {
-      console.log("Fetching districts for state:", state);
-      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15/67e28e21313bdbca16ae2861/related`);
-      const districtList = response.data.map((item: any) => item.name || item);
+      console.log("Fetching districts for state ID:", stateId);
+      const response = await axios.get(
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15/${stateId}/related`
+      );
+      const districtList = response.data.map((item: any) => ({
+        _id: item._id,
+        name: item.name || item,
+      }));
       console.log("Fetched districts:", districtList);
       setDistricts(districtList);
       return districtList;
@@ -157,10 +189,14 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  // Fetch territories (for territoryName and territoryCode mapping)
-  const fetchTerritories = async () => {
+
+  const fetchTerritories = async (districtId: string) => {
+    setLoadingTerritories(true);
     try {
-      const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/15`); // Adjust endpoint if needed
+      console.log("Fetching territories for district ID:", districtId);
+      const response = await axios.get(
+        `${import.meta.env.VITE_CONFIGURATION_URL}/api/entities/16/${districtId}/related`
+      );
       const territoryList = response.data.map((item: any) => ({
         _id: item._id,
         code: item.code,
@@ -173,6 +209,8 @@ const AddEditTerritoryMappingPage = () => {
       console.error("Error fetching territories:", error);
       message.error("Failed to load territories.");
       return [];
+    } finally {
+      setLoadingTerritories(false);
     }
   };
 
@@ -190,22 +228,31 @@ const AddEditTerritoryMappingPage = () => {
     }
   };
 
-  // Load initial data
+  
   useEffect(() => {
     fetchUsers();
-    fetchTerritories(); // Fetch territories initially
     if (isEditMode) {
       setLoading(true);
       const loadEditData = async () => {
         try {
-          const response = await axios.get(`${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}`);
+          const response = await axios.get(
+            `${import.meta.env.VITE_CONFIGURATION_URL}/api/territory-mappings/${id}`
+          );
           console.log("Fetched Territory Data:", response.data);
 
           if (response.data) {
+            const countryList = await fetchCountries();
+            const country = countryList.find((c:any) => c.name === response.data.country);
+            const stateList = country?._id ? await fetchStates(country._id) : [];
+            const state = stateList.find((s:any) => s.name === response.data.state);
+            const districtList = state?._id ? await fetchDistricts(state._id) : [];
+            const district = districtList.find((d:any) => d.name === response.data.district);
+            // const territoryList = district?._id ? await fetchTerritories(district._id) : [];
+
             const territoryData = {
-              country: response.data.country || "",
-              state: response.data.state || "",
-              district: response.data.district || "",
+              country: country?._id || "",
+              state: state?._id || "",
+              district: district?._id || "",
               territoryCode: response.data.territoryCode || "",
               territoryName: response.data.territoryName || "",
               executive: response.data.executive || "",
@@ -217,23 +264,14 @@ const AddEditTerritoryMappingPage = () => {
             reset(territoryData);
             console.log("Form reset with:", territoryData);
 
-            const countryList = await fetchCountries();
-            if (territoryData.country && countryList.includes(territoryData.country)) {
-              const stateList = await fetchStates(territoryData.country);
+            if (country?._id && !state) {
+              const stateList = await fetchStates(country._id);
               if (stateList.length > 0) {
-                const stateToSet = stateList.includes(territoryData.state)
-                  ? territoryData.state
-                  : stateList[0];
-                console.log("Setting state to:", stateToSet);
-                setValue("state", stateToSet, { shouldValidate: true });
-
-                const districtList = await fetchDistricts(stateToSet);
+                setValue("state", stateList[0]._id, { shouldValidate: true });
+                const districtList = await fetchDistricts(stateList[0]._id);
                 if (districtList.length > 0) {
-                  const districtToSet = districtList.includes(territoryData.district)
-                    ? territoryData.district
-                    : districtList[0];
-                  console.log("Setting district to:", districtToSet);
-                  setValue("district", districtToSet, { shouldValidate: true });
+                  setValue("district", districtList[0]._id, { shouldValidate: true });
+                  await fetchTerritories(districtList[0]._id);
                 }
               }
             }
@@ -246,10 +284,11 @@ const AddEditTerritoryMappingPage = () => {
         }
       };
       loadEditData();
+    } else {
+      fetchCountries(); 
     }
   }, [id, isEditMode, reset, setValue]);
 
-  
   useEffect(() => {
     if (selectedTerritoryName) {
       const selectedTerritory = territories.find((t) => t.name === selectedTerritoryName);
@@ -264,8 +303,8 @@ const AddEditTerritoryMappingPage = () => {
     if (selectedCountry && !isEditMode) {
       fetchStates(selectedCountry).then((stateList) => {
         if (stateList.length > 0 && !watch("state")) {
-          console.log("Auto-populating state in add mode:", stateList[0]);
-          setValue("state", stateList[0], { shouldValidate: true });
+          console.log("Auto-populating state in add mode:", stateList[0].name);
+          setValue("state", stateList[0]._id, { shouldValidate: true });
         }
       });
     }
@@ -275,24 +314,34 @@ const AddEditTerritoryMappingPage = () => {
     if (selectedState && !isEditMode) {
       fetchDistricts(selectedState).then((districtList) => {
         if (districtList.length > 0 && !watch("district")) {
-          console.log("Auto-populating district in add mode:", districtList[0]);
-          setValue("district", districtList[0], { shouldValidate: true });
+          console.log("Auto-populating district in add mode:", districtList[0].name);
+          setValue("district", districtList[0]._id, { shouldValidate: true });
         }
       });
     }
   }, [selectedState, setValue, isEditMode]);
 
+  useEffect(() => {
+    if (selectedDistrict && !isEditMode) {
+      fetchTerritories(selectedDistrict);
+    }
+  }, [selectedDistrict, isEditMode]);
+
   const handleGoBack = () => navigate(-1);
 
   const onSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
+    const selectedCountryObj = countries.find((c) => c._id === data.country);
+    const selectedStateObj = states.find((s) => s._id === data.state);
+    const selectedDistrictObj = districts.find((d) => d._id === data.district);
+
     const payload = {
       tenantKey: "tenant-001",
       territoryCode: data.territoryCode,
       territoryName: data.territoryName,
-      country: String(data.country),
-      state: data.state,
-      district: data.district,
+      country: selectedCountryObj?.name || "",
+      state: selectedStateObj?.name || "",
+      district: selectedDistrictObj?.name || "",
       executive: data.executive,
       territoryManager: data.territoryManager,
       fromDate: data.fromDate ? dayjs(data.fromDate).toISOString() : null,
@@ -379,8 +428,8 @@ const AddEditTerritoryMappingPage = () => {
                         onDropdownVisibleChange={handleDropdownVisibleChange}
                       >
                         {countries.map((country) => (
-                          <Option key={country} value={country}>
-                            {country}
+                          <Option key={country._id} value={country._id}>
+                            {country.name}
                           </Option>
                         ))}
                       </Select>
@@ -407,8 +456,8 @@ const AddEditTerritoryMappingPage = () => {
                         filterOption={handleFilterOption}
                       >
                         {states.map((state) => (
-                          <Option key={state} value={state}>
-                            {state}
+                          <Option key={state._id} value={state._id}>
+                            {state.name}
                           </Option>
                         ))}
                       </Select>
@@ -435,8 +484,8 @@ const AddEditTerritoryMappingPage = () => {
                         filterOption={handleFilterOption}
                       >
                         {districts.map((district) => (
-                          <Option key={district} value={district}>
-                            {district}
+                          <Option key={district._id} value={district._id}>
+                            {district.name}
                           </Option>
                         ))}
                       </Select>
@@ -457,7 +506,7 @@ const AddEditTerritoryMappingPage = () => {
                       <Input
                         {...field}
                         placeholder="Territory Code (auto-populated)"
-                        disabled // Disable manual input since it's autopopulated
+                        disabled
                       />
                     )}
                   />
@@ -474,6 +523,8 @@ const AddEditTerritoryMappingPage = () => {
                         value={field.value}
                         onChange={(value) => field.onChange(value)}
                         style={{ width: "100%" }}
+                        loading={loadingTerritories}
+                        disabled={!selectedDistrict}
                         placeholder="Select Territory Name"
                       >
                         {territories.map((territory) => (
@@ -502,7 +553,7 @@ const AddEditTerritoryMappingPage = () => {
                 </div>
               </div>
 
-              {/* Executive and Territory Manager */}
+             
               <div className="flex flex-col sm:flex-row gap-6 mb-6">
                 <div className="flex-1">
                   <label className="block font-semibold text-gray-700">Select the Executive *</label>

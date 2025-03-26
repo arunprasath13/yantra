@@ -22,7 +22,7 @@ const ConfigurationPage = () => {
                                 <ConfigItem icon={<Building size={20} />} label="Organisation" path={`/organisation/1`} />
                                 <ConfigItem icon={<Building size={20} />} label="Branch / Campus" path={`/branch/2`} />
                                 <ConfigItem icon={<Layers size={20} />} label="Departments" path={`/department/3`} />
-                                <ConfigItem icon={<Users size={20} />} label="Teams" path={`/teams/4`} />
+                                <ConfigItem icon={<Users size={20} />} label="Teams" path={`/teams/21`} />
                             </div>
                         </div>
                     </div>
@@ -58,9 +58,9 @@ const ConfigurationPage = () => {
                             <div className="">
                                 <h2 className="font-medium text-gray-700" style={{ color: "#173E73" }}>Hospital Management</h2>
                                 <div className="space-y-2 mt-2">
-                                    <ConfigItem icon={<Building size={20} />} label="Doctor Type" path={`/doctor-type/13`} />
-                                    <ConfigItem icon={<Users size={20} />} label="Specialisation" path={`/specialisation/14`} />
-                                    <ConfigItem icon={<Layers size={20} />} label="Category" path={`/category/15`} />
+                                    <ConfigItem icon={<Building size={20} />} label="Doctor Type" path={`/doctor-type/4`} />
+                                    <ConfigItem icon={<Users size={20} />} label="Specialisation" path={`/specialisation/10`} />
+                                    <ConfigItem icon={<Layers size={20} />} label="Category" path={`/category/11`} />
                                     <ConfigItem icon={<UserCog size={20} />} label="Engagement Mode" path={`/engagement-mode/16`} />
                                 </div>
                             </div>
